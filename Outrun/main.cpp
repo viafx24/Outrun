@@ -1,6 +1,13 @@
 // un point important à comprendre est qu'il y a le monde 3D et la vue depuis l'écran
 // cela necessite une projection poue adapter la vue depuis l'endroit où on l'a regarde
 
+// comme mis dans onenote, on notera 3 étapes:
+// travaille avec coordonnées physique réel (x,y,z)
+// equation de projection et mise en perspective fonction d'une position de l'observateur (X,Y,Z)
+// passage en 2D avec drawQuad qui supprime le Z.
+// il est possible avec les engins de 3D, on travaille essentiellement avec des triangles et pas des carrés à voir.
+
+
 
 #include <SFML/Graphics.hpp>
 using namespace sf;
@@ -91,7 +98,7 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 				Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
 				Color road = (n / 3) % 2 ? Color(107, 107, 107) : Color(105, 105, 105);
 
-				if (n > 7)
+				if (n > 10)
 				{
 					Line p = lines[(n - 1) % N]; //previous line
 
@@ -103,6 +110,7 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 
 					drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
 					app.display();
+					int a = 5;
 				}
 			}
 
