@@ -33,6 +33,10 @@ struct Line
 
 	Line() { x = y = z = 0; }
 
+	// il est important de comprendre que ces coordonnées correspondent au point de vue de la camera
+	// soit camX, camY et camZ (au point de vue de l'observateur) car la projection effectuée necessite
+	// ces coordonnées.
+
 	void project(int camX, int camY, int camZ)
 	{
 		scale = camD / (z - camZ);
@@ -71,6 +75,7 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 
 		int N = lines.size();
 		int pos = 0;
+		float playerX = 0;
 
 		while (app.isOpen())
 		{
@@ -81,18 +86,32 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 					app.close();
 			}
 
+
+		if (Keyboard::isKeyPressed(Keyboard::Right)) playerX += 200;// deplacement lateral
+	    if (Keyboard::isKeyPressed(Keyboard::Left)) playerX -= 200;
+
 		if (Keyboard::isKeyPressed(Keyboard::Up)) pos+= 200;// avance
         if (Keyboard::isKeyPressed(Keyboard::Down)) pos-=200; // recule
+
+			//        if (Keyboard::isKeyPressed(Keyboard::Right)) playerX += 0.1;// deplacement lateral
+	//        if (Keyboard::isKeyPressed(Keyboard::Left)) playerX -= 0.1;
+	//        if (Keyboard::isKeyPressed(Keyboard::Up)) speed = 200;// avance
+	//        if (Keyboard::isKeyPressed(Keyboard::Down)) speed = -200; // recule
+	//        if (Keyboard::isKeyPressed(Keyboard::Tab)) speed *= 3; // on multiplie la vitesse par trois!! ca marche!! trop cool!
+	//        if (Keyboard::isKeyPressed(Keyboard::W)) H += 100;// on prend la hauteur comme si on volait!!!
+	//        if (Keyboard::isKeyPressed(Keyboard::S)) H -= 100;// on redescend sur terre !!!
+
+
 
 			app.clear();
 			int startPos = pos / segL;
 
 			///////draw road////////
 
-			for (int n=0; n < 300; n++)
+			for (int n=startPos; n < startPos + 300; n++)
 			{
  				Line& l = lines[n % N];
-				l.project(0, 1500, pos);
+				l.project(playerX, 1500, pos);
 
 				Color grass = (n / 3) % 2 ? Color(16, 200, 16) : Color(0, 154, 0);
 				Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
@@ -103,14 +122,9 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 					Line p = lines[(n - 1) % N]; //previous line
 
 					drawQuad(app, grass, 0, p.Y, width, 0, l.Y, width);
-					app.display();
-
 					drawQuad(app, rumble, p.X, p.Y, p.W * 1.2, l.X, l.Y, l.W * 1.2);
-					app.display();
-
 					drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
-					app.display();
-					int a = 5;
+
 				}
 			}
 
