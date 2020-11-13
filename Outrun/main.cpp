@@ -40,8 +40,6 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 	w.draw(shape);
 }
 
-
-
 	int main()
 	{
 		RenderWindow app(VideoMode(width, height), "Outrun Racing!");
@@ -74,10 +72,9 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 			app.clear();
 			int startPos = pos / segL;
 
-
 			///////draw road////////
 
-			for (int n=1; n < 300; n++)
+			for (int n=0; n < 300; n++)
 			{
  				Line& l = lines[n % N];
 				l.project(0, 1500, pos);
@@ -86,14 +83,16 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 				Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
 				Color road = (n / 3) % 2 ? Color(107, 107, 107) : Color(105, 105, 105);
 
-				Line p = lines[(n - 1) % N]; //previous line
+				if (n > 0)
+				{
+					Line p = lines[(n - 1) % N]; //previous line
 
-				drawQuad(app, grass, 0, p.Y, width, 0, l.Y, width);
-				drawQuad(app, rumble, p.X, p.Y, p.W * 1.2, l.X, l.Y, l.W * 1.2);
-				drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
-			//	app.display();
+					drawQuad(app, grass, 0, p.Y, width, 0, l.Y, width);
+					drawQuad(app, rumble, p.X, p.Y, p.W * 1.2, l.X, l.Y, l.W * 1.2);
+					drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
+					//app.display();
+				}
 			}
-
 
 			app.display();
 		}
