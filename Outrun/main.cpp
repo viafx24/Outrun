@@ -5,8 +5,14 @@
 #include <SFML/Graphics.hpp>
 using namespace sf;
 
-int width = 1024;
-int height = 768;
+//int width = 1024;
+//int height = 768;
+
+
+int width = 512;
+int height = 384;
+
+
 int roadW = 2000;
 int segL = 200; //segment length
 float camD = 0.84; //camera depth
@@ -44,6 +50,8 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 	{
 		RenderWindow app(VideoMode(width, height), "Outrun Racing!");
 		app.setFramerateLimit(60);
+		sf::Vector2i Position(0, 0);
+		app.setPosition(Position);
 
 		std::vector<Line> lines;
 
@@ -83,14 +91,18 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 				Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
 				Color road = (n / 3) % 2 ? Color(107, 107, 107) : Color(105, 105, 105);
 
-				if (n > 0)
+				if (n > 7)
 				{
 					Line p = lines[(n - 1) % N]; //previous line
 
 					drawQuad(app, grass, 0, p.Y, width, 0, l.Y, width);
+					app.display();
+
 					drawQuad(app, rumble, p.X, p.Y, p.W * 1.2, l.X, l.Y, l.W * 1.2);
+					app.display();
+
 					drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
-					//app.display();
+					app.display();
 				}
 			}
 
