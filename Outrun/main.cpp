@@ -29,9 +29,9 @@ struct Line
 {
 	float x, y, z; //3d center of line
 	float X, Y, W; //screen coord
-	float scale;
+	float scale,curve ;
 
-	Line() { x = y = z = 0; }
+	Line() { curve= x = y = z = 0; }
 
 	// il est important de comprendre que ces coordonnées correspondent au point de vue de la camera
 	// soit camX, camY et camZ (au point de vue de l'observateur) car la projection effectuée necessite
@@ -70,6 +70,9 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 		{
 			Line line; 			
 			line.z = i * segL; 
+
+			if (i > 300 && i < 700) line.curve = 0.5;
+
 			lines.push_back(line);
 		}
 
@@ -79,6 +82,7 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 
 		while (app.isOpen())
 		{
+
 			Event e;
 			while (app.pollEvent(e))
 			{
@@ -105,13 +109,16 @@ void drawQuad(RenderWindow& w, Color c, int x1, int y1, int w1, int x2, int y2, 
 
 			app.clear();
 			int startPos = pos / segL;
-
+			float x = 0, dx = 0;
 			///////draw road////////
-
+			
 			for (int n=startPos; n < startPos + 300; n++)
 			{
- 				Line& l = lines[n % N];
-				l.project(playerX, 1500, pos);
+ 				Line& l = lines[n % N];// permet de manière subtile de recommencer la boucle quand n atteint 1600 car 1600 % 1600 = 1 (je crois)
+				l.project(playerX-x, 1500, pos);
+
+				x += dx;
+				dx += l.curve;
 
 				Color grass = (n / 3) % 2 ? Color(16, 200, 16) : Color(0, 154, 0);
 				Color rumble = (n / 3) % 2 ? Color(255, 255, 255) : Color(0, 0, 0);
