@@ -12,12 +12,12 @@
 #include <SFML/Graphics.hpp>
 using namespace sf;
 
-//int width = 1024;
-//int height = 768;
+int width = 1024;
+int height = 768;
 
-
-int width = 512;
-int height = 384;
+//
+//int width = 512;
+//int height = 384;
 
 
 int roadW = 2000;
@@ -29,7 +29,8 @@ struct Line
 {
 	float x, y, z; //3d center of line
 	float X, Y, W; //screen coord
-	float scale, curve;
+	float curve, spriteX, clip, scale;
+	Sprite sprite;
 
 	Line() { curve = x = y = z = 0; }
 
@@ -43,6 +44,32 @@ struct Line
 		X = (1 + scale * (x - camX)) * width / 2;
 		Y = (1 - scale * (y - camY)) * height / 2;
 		W = scale * roadW * width / 2;
+	}
+
+
+	// pas le courage de rentrer dans cette fonction; envie de passer à d'autre trucs.
+	void drawSprite(RenderWindow& app)
+	{
+		Sprite s = sprite;
+		int w = s.getTextureRect().width;
+		int h = s.getTextureRect().height;
+
+		float destX = X + scale * spriteX * width / 2;
+		float destY = Y + 4;
+		float destW = w * W / 266;
+		float destH = h * W / 266;
+
+		destX += destW * spriteX; //offsetX
+		destY += destH * (-1);    //offsetY
+
+		float clipH = destY + destH - clip;
+		if (clipH < 0) clipH = 0;
+
+		if (clipH >= destH) return;
+		s.setTextureRect(IntRect(0, 0, w, h - h * clipH / destH));
+		s.setScale(destW / w, destH / h);
+		s.setPosition(destX, destY);
+		app.draw(s);
 	}
 };
 
@@ -61,8 +88,32 @@ int main()
 {
 	RenderWindow app(VideoMode(width, height), "Outrun Racing!");
 	app.setFramerateLimit(60);
+
+	// je rajoute cela pour travailler avec la fenètre à gauche.
 	sf::Vector2i Position(0, 0);
 	app.setPosition(Position);
+
+
+	Texture t[50]; // on initialise un tableau de texture et de sprite
+	Sprite object[50];
+
+	// on charge les images d'arbre, herbes, maisons numéroté de 1 à 7
+	for (int i = 1; i <= 7; i++)
+	{
+		t[i].loadFromFile("images/" + std::to_string(i) + ".png");// charge la texture depuis le fichier
+		t[i].setSmooth(true);// ameliore la qualité de la texture? sorte d'antialiasing?
+		object[i].setTexture(t[i]);// met la texture dans le sprite.
+	}
+
+	// charge l'image de fond (768*411)
+	Texture bg;
+	bg.loadFromFile("images/bg.png");
+	bg.setRepeated(true);// quand on depasse la largeur du background, il est simplement repeté
+	Sprite sBackground(bg);
+	sBackground.setTextureRect(IntRect(0, 0, 5000, 411)); // j'imagine que le 5000 sert à gérer la partie setrepeated et faire comme
+	// si l'image était large de 5000 pixel alors qu'elle ne fait que 768 pixel de large.
+	sBackground.setPosition(-2000, 0); // clairement un point que je pige pas avec les position négative. on fera des tests.
+
 
 	std::vector<Line> lines;
 
@@ -72,6 +123,18 @@ int main()
 		line.z = i * segL;
 
 		if (i > 300 && i < 700) line.curve = 0.5;
+
+		if (i > 1100) line.curve = -0.7;
+
+		if (i < 300 && i % 20 == 0) { line.spriteX = -2.5; line.sprite = object[5]; }
+		if (i % 17 == 0) { line.spriteX = 2.0; line.sprite = object[6]; }
+		if (i > 300 && i % 20 == 0) { line.spriteX = -0.7; line.sprite = object[4]; }
+		if (i > 800 && i % 20 == 0) { line.spriteX = -1.2; line.sprite = object[1]; }
+		if (i == 400) { line.spriteX = -1.2; line.sprite = object[7]; }
+
+
+
+
 
 		if (i > 750) line.y = sin(i / 30.0) * 1500;
 
@@ -112,7 +175,10 @@ int main()
 		// en cas de marche arrière au depart, on commence à al fin de la boucle et on parcout la boucle en sens inverse
 		while (pos < 0) pos += N * segL;
 
-		app.clear();
+		app.clear(Color(105, 205, 4));
+
+		// il manquait bien ces lignes pour faire apparaitre le background (dans la video youtube).
+		app.draw(sBackground);
 		int startPos = pos / segL;
 		// la position de la camera est plus haute dans la partie sinus haute ( cela gènère l'effet de bosse)
 		int camH = 1500 + lines[startPos].y;
@@ -125,7 +191,7 @@ int main()
 		for (int n = startPos; n < startPos + 300; n++)
 		{
 			Line& l = lines[n % N];// permet de manière subtile de recommencer la boucle quand n atteint 1600 car 1600 % 1600 = 1 (je crois)
-			l.project(playerX - x, camH, startPos *segL - (n >= N ? N * segL : 0));// condition ternaire sur laquelle je ne vais pas passer de temps
+			l.project(playerX - x, camH, startPos * segL - (n >= N ? N * segL : 0));// condition ternaire sur laquelle je ne vais pas passer de temps
 			// sert en association avec les deux while pour permettre de parcourir plusieurs fois la boucle dans les deux sens.
 
 			// x (dx à chaque tour) augmente plus vite que dx (0.5 à chaque tour), 
@@ -155,6 +221,10 @@ int main()
 				drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
 
 			}
+
+			////////draw objects////////
+			for (int n = startPos + 300; n > startPos; n--)
+				lines[n % N].drawSprite(app);
 		}
 
 		app.display();
@@ -164,7 +234,7 @@ int main()
 }
 
 
-
+//
 //
 //#include <SFML/Graphics.hpp>
 //using namespace sf;
@@ -188,7 +258,7 @@ int main()
 //}
 //
 //
-//// cette structure line semble trés importante. elle contient de nombreux paramètres et deux méthodes.
+// cette structure line semble trés importante. elle contient de nombreux paramètres et deux méthodes.
 //
 //struct Line
 //{
@@ -244,7 +314,7 @@ int main()
 //    Texture t[50]; // on initialise un tableau de texture et de sprite
 //    Sprite object[50];
 //
-//    // on charge les images d'arbre, herbes, maisons numéroté de 1 à 7
+//     on charge les images d'arbre, herbes, maisons numéroté de 1 à 7
 //    for (int i = 1; i <= 7; i++)
 //    {
 //        t[i].loadFromFile("images/" + std::to_string(i) + ".png");// charge la texture depuis le fichier
@@ -252,24 +322,24 @@ int main()
 //        object[i].setTexture(t[i]);// met la texture dans le sprite.
 //    }
 //
-//    // charge l'image de fond (768*411)
+//     charge l'image de fond (768*411)
 //    Texture bg;
 //    bg.loadFromFile("images/bg.png");
 //    bg.setRepeated(true);// quand on depasse la largeur du background, il est simplement repeté
 //    Sprite sBackground(bg);
 //    sBackground.setTextureRect(IntRect(0, 0, 5000, 411)); // j'imagine que le 5000 sert à gérer la partie setrepeated et faire comme
-//    // si l'image était large de 5000 pixel alors qu'elle ne fait que 768 pixel de large.
+//     si l'image était large de 5000 pixel alors qu'elle ne fait que 768 pixel de large.
 //    sBackground.setPosition(-2000, 0); // clairement un point que je pige pas avec les position négative. on fera des tests.
 //
 //
-//    // on va créer un vecteur d'objet line défini plus haut. On rentre ici dans du C++ plus intéressant.
-//    // A noter ici que le vecteur de line a un "s", lines ( le vecteur contenant les 1600 lignes).
+//     on va créer un vecteur d'objet line défini plus haut. On rentre ici dans du C++ plus intéressant.
+//     A noter ici que le vecteur de line a un "s", lines ( le vecteur contenant les 1600 lignes).
 //    std::vector<Line> lines;
 //
 //    for (int i = 0; i < 1600; i++)
 //    {
 //        Line line; // on va créer 1600 objet line
-//        // gère probablement la profondeur en z avec un z allant de 0 à 320 000 (1600 *200)
+//         gère probablement la profondeur en z avec un z allant de 0 à 320 000 (1600 *200)
 //        line.z = i * segL; // segL : longueur d'un segment fixé à 200
 //
 //
@@ -311,7 +381,7 @@ int main()
 //        if (Keyboard::isKeyPressed(Keyboard::W)) H += 100;// on prend la hauteur comme si on volait!!!
 //        if (Keyboard::isKeyPressed(Keyboard::S)) H -= 100;// on redescend sur terre !!!
 //
-//        // increment pos de 200 à chaque itération
+//         increment pos de 200 à chaque itération
 //        pos += speed;
 //        while (pos >= N * segL) pos -= N * segL;
 //        while (pos < 0) pos += N * segL;
@@ -321,14 +391,14 @@ int main()
 //        int startPos = pos / segL;
 //        int camH = lines[startPos].y + H; // gère la hauteur?
 //
-//        // gère le fait que l'image de fond se décale 
+//         gère le fait que l'image de fond se décale 
 //        if (speed > 0) sBackground.move(-lines[startPos].curve * 2, 0);
 //        if (speed < 0) sBackground.move(lines[startPos].curve * 2, 0);
 //
 //        int maxy = height;
 //        float x = 0, dx = 0;
 //
-//        ///////draw road////////
+//        /////draw road////////
 //        for (int n = startPos; n < startPos + 300; n++)
 //        {
 //            Line& l = lines[n % N];
@@ -351,7 +421,7 @@ int main()
 //            drawQuad(app, road, p.X, p.Y, p.W, l.X, l.Y, l.W);
 //        }
 //
-//        ////////draw objects////////
+//        //////draw objects////////
 //        for (int n = startPos + 300; n > startPos; n--)
 //            lines[n % N].drawSprite(app);
 //
