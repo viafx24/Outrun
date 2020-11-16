@@ -89,16 +89,30 @@ int main()
      {
        Line line;
        line.z = i*segL;
-
+       // une boucle à droite
        if (i>300 && i<700) line.curve=0.5;
+
+       // une boucle à gauche 
        if (i>1100) line.curve=-0.7;
 
+
+       // l'image 3 et 2 ne sont pas utilisé.
+
+       // arbre à gauche, quand inf à 300
        if (i<300 && i%20==0) {line.spriteX=-2.5; line.sprite=object[5];}
+       // herbe tout le temps modulo 17; à droite
        if (i%17==0)          {line.spriteX=2.0; line.sprite=object[6];}
+
+       // palmier quand sup à 300 ; à gauche
        if (i>300 && i%20==0) {line.spriteX=-0.7; line.sprite=object[4];}
+
+       // palmier droit sup à 800
        if (i>800 && i%20==0) {line.spriteX=-1.2; line.sprite=object[1];}
+
+       // la maison
        if (i==400)           {line.spriteX=-1.2; line.sprite=object[7];}
 
+       // gestion des bosses
        if (i>750) line.y = sin(i/30.0)*1500;
 
        lines.push_back(line);
@@ -136,6 +150,7 @@ int main()
   app.draw(sBackground);
   int startPos = pos/segL;
   int camH = lines[startPos].y + H;
+  // permet de décaler l'image de fond dans les virages
   if (speed>0) sBackground.move(-lines[startPos].curve*2,0);
   if (speed<0) sBackground.move( lines[startPos].curve*2,0);
 
@@ -166,6 +181,8 @@ int main()
    }
 
     ////////draw objects////////
+
+ // Pourquoi dans le sens inverse??
     for(int n=startPos+300; n>startPos; n--)
       lines[n%N].drawSprite(app);
 
