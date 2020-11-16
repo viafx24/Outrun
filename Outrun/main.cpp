@@ -3,7 +3,7 @@ using namespace sf;
 
 int width = 1024;
 int height = 768;
-int roadW = 2000;
+int roadW = 2000; 
 int segL = 200; //segment length
 float camD = 0.84; //camera depth
 
