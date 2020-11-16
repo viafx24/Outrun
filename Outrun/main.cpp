@@ -107,10 +107,14 @@ int main()
 	//        if (Keyboard::isKeyPressed(Keyboard::W)) H += 100;// on prend la hauteur comme si on volait!!!
 	//        if (Keyboard::isKeyPressed(Keyboard::S)) H -= 100;// on redescend sur terre !!!
 
-
+		// si on finit la boucle on recommence à zero.
+		while (pos >= N * segL) pos -= N * segL;
+		// en cas de marche arrière au depart, on commence à al fin de la boucle et on parcout la boucle en sens inverse
+		while (pos < 0) pos += N * segL;
 
 		app.clear();
 		int startPos = pos / segL;
+		// la position de la camera est plus haute dans la partie sinus haute ( cela gènère l'effet de bosse)
 		int camH = 1500 + lines[startPos].y;
 		float x = 0, dx = 0;
 		int maxy = height;
@@ -121,7 +125,8 @@ int main()
 		for (int n = startPos; n < startPos + 300; n++)
 		{
 			Line& l = lines[n % N];// permet de manière subtile de recommencer la boucle quand n atteint 1600 car 1600 % 1600 = 1 (je crois)
-			l.project(playerX - x, camH, pos);
+			l.project(playerX - x, camH, startPos *segL - (n >= N ? N * segL : 0));// condition ternaire sur laquelle je ne vais pas passer de temps
+			// sert en association avec les deux while pour permettre de parcourir plusieurs fois la boucle dans les deux sens.
 
 			// x (dx à chaque tour) augmente plus vite que dx (0.5 à chaque tour), 
 			x += dx;
@@ -129,6 +134,8 @@ int main()
 
 
 			//l.clip = maxy;
+
+			// je ne pige pas ces deux lignes.
 			if (l.Y >= maxy) continue;
 			maxy = l.Y;
 
